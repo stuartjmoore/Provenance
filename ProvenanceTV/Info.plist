@@ -30,16 +30,16 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>593</string>
+	<string>638</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>Revision</key>
-	<string>37a9baf</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
+	<key>Revision</key>
+	<string>c3f1a73</string>
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
 	<key>UIRequiredDeviceCapabilities</key>
