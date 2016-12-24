@@ -127,14 +127,12 @@
     return _iCadeGamepad;
 }
 
--(GCControllerPlayerIndex) playerIndex {
-    return GCControllerPlayerIndex1;
+- (NSString *)vendorName {
+    return @"iCade";
 }
 
--(void) setPlayerIndex:(GCControllerPlayerIndex) playerIndex {
-    return;
+- (BOOL)isAttachedToDevice {
+    return NO;
 }
-
-
 
 @end

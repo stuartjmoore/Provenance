@@ -11,6 +11,7 @@
 #import "PViCadeController.h"
 #import "kICadeControllerSetting.h"
 #import "PViCade8BitdoController.h"
+#import "PViCadeController.h"
 
 NSString * const PVControllerManagerControllerReassignedNotification = @"PVControllerManagerControllerReassignedNotification";
 
@@ -122,16 +123,30 @@ NSString * const PVControllerManagerControllerReassignedNotification = @"PVContr
     }
 }
 
-- (void)listenForICadeControllers
+- (void)listenForICadeControllersForPlayer:(NSInteger)player window:(UIWindow *)window completion:(void (^)(void))completion
 {
     __weak PVControllerManager* weakSelf = self;
     self.iCadeController.controllerPressedAnyKey = ^(PViCadeController* controller) {
-        weakSelf.iCadeController.controllerPressedAnyKey = nil;
-        [weakSelf assignController:weakSelf.iCadeController];
-        
-        [[NSNotificationCenter defaultCenter] postNotificationName:GCControllerDidConnectNotification object:[[PVControllerManager sharedManager] iCadeController]];
+        [weakSelf setController:weakSelf.iCadeController toPlayer:player];
+        [weakSelf stopListeningForICadeControllers];
 
+        if (completion) {
+            completion();
+        }
     };
+
+     [self.iCadeController.reader listenToWindow:window];
+}
+
+- (void)listenForICadeControllers
+{
+    [self listenForICadeControllersForPlayer:0 window:nil completion:nil];
+}
+
+- (void)stopListeningForICadeControllers
+{
+    [self.iCadeController setControllerPressedAnyKey:nil];
+    [self.iCadeController.reader listenToWindow:nil];
 }
 
 #pragma mark - Controllers assignment
@@ -139,7 +154,7 @@ NSString * const PVControllerManagerControllerReassignedNotification = @"PVContr
 - (void)setController:(GCController *)controller toPlayer:(NSUInteger)player;
 {
 #if TARGET_OS_TV
-    if ([controller microGamepad])
+    if (![controller isKindOfClass:[PViCadeController class]] && [controller microGamepad])
     {
         [[controller microGamepad] setAllowsRotation:YES];
         [[controller microGamepad] setReportsAbsoluteDpadValues:YES];

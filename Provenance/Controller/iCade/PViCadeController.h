@@ -7,12 +7,11 @@
 //
 
 #import <GameController/GameController.h>
+#import "PViCadeReader.h"
 
 @class PViCadeGamepad;
-@class PViCadeReader;
 
-@interface PViCadeController : GCController {
-}
+@interface PViCadeController : GCController
 
 -(void) refreshListener;
 
