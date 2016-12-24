@@ -546,57 +546,30 @@ static NSString *_reuseIdentifier = @"PVGameLibraryCollectionViewCell";
     [self.watcher startMonitoring];
 
     self.coverArtWatcher = [[PVDirectoryWatcher alloc] initWithPath:self.coverArtPath extractionStartedHandler:^(NSString *path) {
-        //
+        MBProgressHUD *hud = [MBProgressHUD HUDForView:weakSelf.view];
+
+        if (!hud) {
+            hud = [MBProgressHUD showHUDAddedTo:weakSelf.view animated:YES];
+        }
+
+        [hud setUserInteractionEnabled:NO];
+        [hud setMode:MBProgressHUDModeAnnularDeterminate];
+        [hud setProgress:0];
+        [hud setLabelText:@"Extracting Archive…"];
     } extractionUpdatedHandler:^(NSString *path, NSInteger entryNumber, NSInteger total, unsigned long long fileSize, unsigned long long bytesRead) {
-        //
+        MBProgressHUD *hud = [MBProgressHUD HUDForView:weakSelf.view];
+        [hud setProgress:(float)bytesRead / (float)fileSize];
     } extractionCompleteHandler:^(NSArray *paths) {
+        MBProgressHUD *hud = [MBProgressHUD HUDForView:weakSelf.view];
+        [hud setProgress:1];
+        [hud setLabelText:@"Extraction Complete!"];
+        [hud hide:YES afterDelay:0.5];
+
         for (NSString *imageFilepath in paths) {
             NSString *imageFullPath = [weakSelf.coverArtPath stringByAppendingPathComponent:imageFilepath];
-            BOOL isDirectory = NO;
-
-            if (![NSFileManager.defaultManager fileExistsAtPath:imageFullPath isDirectory:&isDirectory] || isDirectory) {
-                continue;
-            }
-
-            NSData *coverArtFullData = [NSData dataWithContentsOfFile:imageFullPath];
-            UIImage *coverArtFullImage = [UIImage imageWithData:coverArtFullData];
-            UIImage *coverArtScaledImage = [coverArtFullImage scaledImageWithMaxResolution:PVThumbnailMaxResolution];
-
-            if (!coverArtScaledImage) {
-                continue;
-            }
-
-            NSData *coverArtScaledData = UIImagePNGRepresentation(coverArtScaledImage);
-            NSString *hash = [coverArtScaledData md5Hash];
-            [PVMediaCache writeDataToDisk:coverArtScaledData withKey:hash];
-
-            NSString *imageFileExtension = [@"." stringByAppendingString:imageFilepath.pathExtension];
-            NSString *gameFilename = [imageFilepath.lastPathComponent stringByReplacingOccurrencesOfString:imageFileExtension withString:@""];
-
-            NSString *systemID = [PVEmulatorConfiguration.sharedInstance systemIdentifierForFileExtension:gameFilename.pathExtension];
-            NSArray *cdBasedSystems = [[PVEmulatorConfiguration sharedInstance] cdBasedSystemIDs];
-
-            if ([cdBasedSystems containsObject:systemID] && ![imageFilepath.pathExtension isEqualToString:@"cue"]) {
-                continue;
-            }
-
-            NSString *gamePartialPath = [systemID stringByAppendingPathComponent:gameFilename];
-            RLMResults *games = [PVGame objectsInRealm:weakSelf.realm withPredicate:[NSPredicate predicateWithFormat:@"romPath == %@", gamePartialPath]];
-
-            if (games.count < 1) {
-                continue;
-            }
-
-            PVGame *game = games.firstObject;
-
-            [weakSelf.realm beginWriteTransaction];
-            [game setCustomArtworkURL:hash];
-            [weakSelf.realm commitWriteTransaction];
-
+            PVGame *game = [PVGameImporter importArtworkFromPath:imageFullPath];
             NSArray *indexPaths = [weakSelf indexPathsForGameWithMD5Hash:game.md5Hash];
             [weakSelf.collectionView reloadItemsAtIndexPaths:indexPaths];
-
-            [NSFileManager.defaultManager removeItemAtPath:imageFullPath error:nil];
         }
     }];
 
