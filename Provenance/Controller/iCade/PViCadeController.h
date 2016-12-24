@@ -11,7 +11,9 @@
 
 @class PViCadeGamepad;
 
-@interface PViCadeController : GCController
+@interface PViCadeController : GCController {
+    GCControllerPlayerIndex _playerIndex;
+}
 
 -(void) refreshListener;
 

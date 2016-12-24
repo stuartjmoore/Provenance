@@ -135,4 +135,12 @@
     return NO;
 }
 
+- (GCControllerPlayerIndex)playerIndex {
+    return _playerIndex;
+}
+
+- (void)setPlayerIndex:(GCControllerPlayerIndex)playerIndex {
+    _playerIndex = playerIndex;
+}
+
 @end
